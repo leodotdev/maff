@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { DonationDialog } from "@/components/donation-dialog";
 
 export default function About() {
   return (

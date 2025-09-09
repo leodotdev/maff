@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -77,7 +77,9 @@ const NavigationMenuItem = React.forwardRef<
       onMouseEnter={() => value && setActiveItem(value)}
       {...props}
     >
-      <NavigationMenuItemProvider value={{ isActive, value }}>
+      <NavigationMenuItemProvider
+        value={{ isActive: isActive || false, value }}
+      >
         {children}
       </NavigationMenuItemProvider>
     </li>
@@ -169,21 +171,31 @@ const NavigationMenuLink = React.forwardRef<
   HTMLAnchorElement,
   React.AnchorHTMLAttributes<HTMLAnchorElement> & { asChild?: boolean }
 >(({ className, href, children, asChild, ...props }, ref) => {
-  const Component = asChild ? "div" : Link;
-  const componentProps = asChild ? {} : { href: href || "#" };
+  if (asChild) {
+    return (
+      <div
+        className={cn(
+          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+          className,
+        )}
+      >
+        {children}
+      </div>
+    );
+  }
 
   return (
-    <Component
-      ref={ref as any}
+    <Link
+      ref={ref}
+      href={href || "#"}
       className={cn(
         "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
         className,
       )}
-      {...componentProps}
       {...props}
     >
       {children}
-    </Component>
+    </Link>
   );
 });
 NavigationMenuLink.displayName = "NavigationMenuLink";

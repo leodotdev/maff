@@ -43,7 +43,10 @@ export function InputOTP({
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "Backspace" && !value[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -54,7 +57,9 @@ export function InputOTP({
       {Array.from({ length: maxLength }, (_, index) => (
         <React.Fragment key={index}>
           <input
-            ref={(el) => (inputRefs.current[index] = el)}
+            ref={(el) => {
+              inputRefs.current[index] = el;
+            }}
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -68,7 +73,7 @@ export function InputOTP({
             className={cn(
               "h-12 w-12 rounded-md border border-gray-400 dark:border-gray-600 bg-background text-center text-lg font-medium",
               "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-              "disabled:cursor-not-allowed disabled:opacity-50"
+              "disabled:cursor-not-allowed disabled:opacity-50",
             )}
           />
           {index === 1 && maxLength === 4 && (
@@ -80,20 +85,20 @@ export function InputOTP({
   );
 }
 
-export function InputOTPGroup({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={cn("flex items-center", className)}>
-      {children}
-    </div>
-  );
+export function InputOTPGroup({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={cn("flex items-center", className)}>{children}</div>;
 }
 
 export function InputOTPSlot({
-  index,
   value,
-  isActive
+  isActive,
 }: {
-  index: number;
   value?: string;
   isActive?: boolean;
 }) {
@@ -102,7 +107,7 @@ export function InputOTPSlot({
       className={cn(
         "relative h-12 w-12 rounded-md border border-gray-400 dark:border-gray-600",
         "flex items-center justify-center text-lg font-medium",
-        isActive && "ring-2 ring-ring ring-offset-2"
+        isActive && "ring-2 ring-ring ring-offset-2",
       )}
     >
       {value}

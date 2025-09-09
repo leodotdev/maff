@@ -49,7 +49,7 @@ export default function Verify() {
         )}
 
         <p className="text-xs text-muted-foreground mt-8">
-          If you don't have a PIN, please contact the site administrator.
+          If you don&apos;t have a PIN, please contact the site administrator.
         </p>
       </div>
     </div>

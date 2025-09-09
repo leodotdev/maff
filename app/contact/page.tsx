@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { DonationDialog } from "@/components/donation-dialog";
 
 export default function Contact() {
   return (
@@ -42,8 +41,8 @@ export default function Contact() {
       <main className="max-w-[960px] mx-auto px-4 py-16 text-center">
         <h1 className="text-5xl font-bold mb-6">Contact Us</h1>
         <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-          Have a question or want to work together? We'd love to hear from you.
-          Get in touch using the form below.
+          Have a question or want to work together? We&apos;d love to hear from
+          you. Get in touch using the form below.
         </p>
 
         <div className="max-w-md mx-auto">

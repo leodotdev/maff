@@ -16,7 +16,6 @@ import {
   FormControl,
   FormDescription,
   FormField,
-  FormItem,
   FormLabel,
 } from "@/components/ui/form";
 
@@ -163,7 +162,7 @@ export function DonationDialog({
                   />
                 </FormControl>
                 <FormDescription>
-                  We'll send your donation receipt to this email
+                  We&apos;ll send your donation receipt to this email
                 </FormDescription>
               </FormField>
 
