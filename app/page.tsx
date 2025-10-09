@@ -197,7 +197,7 @@ export default function Home() {
 
       {/* Hero Section with Video Carousel */}
       <section className="w-full bg-black">
-        <div className="relative w-full aspect-video overflow-hidden group">
+        <div className="relative w-full h-[50vh] overflow-hidden group">
           {VIDEOS.map((videoId, index) => (
             <div
               key={videoId}
