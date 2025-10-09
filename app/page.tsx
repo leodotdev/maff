@@ -173,6 +173,14 @@ export default function Home() {
       donateSection.scrollIntoView({ behavior: 'smooth' });
       // Update URL hash without triggering page reload
       window.history.pushState(null, '', '#donate');
+
+      // Focus and select the custom input after scroll completes
+      setTimeout(() => {
+        if (customInputRef.current) {
+          customInputRef.current.focus();
+          customInputRef.current.select();
+        }
+      }, 800);
     }
   };
 
