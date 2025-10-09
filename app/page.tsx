@@ -56,6 +56,38 @@ export default function Home() {
     };
   }, []);
 
+  // Control video playback when switching videos
+  useEffect(() => {
+    // Wait a bit for players to be ready
+    const timer = setTimeout(() => {
+      playerRefs.current.forEach((player, index) => {
+        if (player && player.pauseVideo && player.playVideo) {
+          if (index === currentVideoIndex) {
+            player.playVideo();
+          } else {
+            player.pauseVideo();
+          }
+        }
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [currentVideoIndex]);
+
+  const switchToVideo = (index: number, unmute: boolean = false) => {
+    setCurrentVideoIndex(index);
+
+    // If unmute is requested, unmute the video after switching
+    if (unmute) {
+      setTimeout(() => {
+        const player = playerRefs.current[index];
+        if (player && player.unMute) {
+          player.unMute();
+        }
+      }, 200);
+    }
+  };
+
   const nextVideo = () => {
     setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
   };
@@ -133,9 +165,7 @@ export default function Home() {
             >
               <iframe
                 id={`player-${index}`}
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&cc_load_policy=1&playsinline=1&rel=0&fs=1&enablejsapi=1&origin=${
-                  typeof window !== "undefined" ? window.location.origin : ""
-                }`}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&cc_load_policy=1&playsinline=1&rel=0&fs=1&enablejsapi=1`}
                 className="w-full h-full relative z-20"
                 allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
@@ -193,7 +223,7 @@ export default function Home() {
             {videos.map((videoId, index) => (
               <button
                 key={videoId}
-                onClick={() => setCurrentVideoIndex(index)}
+                onClick={() => switchToVideo(index, true)}
                 className={`relative flex-shrink-0 w-40 aspect-video rounded-lg transition-all ${
                   index === currentVideoIndex
                     ? "ring-4 ring-blue-500 scale-105"
