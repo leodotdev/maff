@@ -93,8 +93,8 @@ export default function Home() {
 
   // Handle URL hash navigation to donation section
   useEffect(() => {
-    // Check if URL has #donate or if pathname is /donate
-    if (window.location.hash === '#donate' || window.location.pathname === '/donate') {
+    // Check if URL has #donate hash
+    if (window.location.hash === '#donate') {
       setTimeout(() => {
         const donateSection = document.getElementById('donate');
         if (donateSection) {

@@ -58,6 +58,12 @@ function SuccessContent() {
           <p className="text-gray-600 mb-6">{error}</p>
           <Link
             href="/"
+            onClick={() => {
+              // Clear any hash from URL when returning home
+              if (typeof window !== 'undefined') {
+                window.history.replaceState(null, '', '/');
+              }
+            }}
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Return Home
@@ -119,6 +125,12 @@ function SuccessContent() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/"
+            onClick={() => {
+              // Clear any hash from URL when returning home
+              if (typeof window !== 'undefined') {
+                window.history.replaceState(null, '', '/');
+              }
+            }}
             className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             Return Home
