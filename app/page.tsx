@@ -1,8 +1,39 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+// YouTube Player type definitions
+interface YTPlayer {
+  playVideo: () => void;
+  pauseVideo: () => void;
+  unMute: () => void;
+  setVolume: (volume: number) => void;
+}
+
+interface YTEvent {
+  target: YTPlayer;
+  data: number;
+}
+
+declare global {
+  interface Window {
+    YT: {
+      Player: new (elementId: string, config: {
+        events: {
+          onReady?: (event: YTEvent) => void;
+          onStateChange?: (event: YTEvent) => void;
+        };
+      }) => YTPlayer;
+    };
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+const PRESET_AMOUNTS = [250, 500, 1000, 2500, 5000];
+const VIDEOS = ["H2_aua_K2r4", "TIcShqSYSao", "AVBFJAuunHs", "X4wHOFoHZLY"];
 
 export default function Home() {
   const [selectedAmount, setSelectedAmount] = useState<number | "custom">(
@@ -16,17 +47,21 @@ export default function Home() {
   });
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const playerRefs = useRef<any[]>([]);
-
-  const presetAmounts = [250, 500, 1000, 2500, 5000];
-
-  const videos = ["H2_aua_K2r4", "TIcShqSYSao", "AVBFJAuunHs", "X4wHOFoHZLY"];
+  const playerRefs = useRef<(YTPlayer | null)[]>([]);
 
   useEffect(() => {
     if (selectedAmount === "custom" && customInputRef.current) {
       customInputRef.current.focus();
     }
   }, [selectedAmount]);
+
+  const nextVideo = useCallback(() => {
+    setCurrentVideoIndex((prev) => (prev + 1) % VIDEOS.length);
+  }, []);
+
+  const prevVideo = useCallback(() => {
+    setCurrentVideoIndex((prev) => (prev - 1 + VIDEOS.length) % VIDEOS.length);
+  }, []);
 
   // Load YouTube IFrame API and initialize players
   useEffect(() => {
@@ -35,15 +70,15 @@ export default function Home() {
     const firstScriptTag = document.getElementsByTagName("script")[0];
     firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
 
-    (window as any).onYouTubeIframeAPIReady = () => {
+    window.onYouTubeIframeAPIReady = () => {
       // Initialize players for each video
-      videos.forEach((videoId, index) => {
-        const player = new (window as any).YT.Player(`player-${index}`, {
+      VIDEOS.forEach((videoId, index) => {
+        const player = new window.YT.Player(`player-${index}`, {
           events: {
-            onReady: (event: any) => {
+            onReady: (event: YTEvent) => {
               event.target.setVolume(50);
             },
-            onStateChange: (event: any) => {
+            onStateChange: (event: YTEvent) => {
               // State 0 = ended
               if (event.data === 0) {
                 nextVideo();
@@ -54,6 +89,19 @@ export default function Home() {
         playerRefs.current[index] = player;
       });
     };
+  }, [nextVideo]);
+
+  // Handle URL hash navigation to donation section
+  useEffect(() => {
+    // Check if URL has #donate or if pathname is /donate
+    if (window.location.hash === '#donate' || window.location.pathname === '/donate') {
+      setTimeout(() => {
+        const donateSection = document.getElementById('donate');
+        if (donateSection) {
+          donateSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
   }, []);
 
   // Control video playback when switching videos
@@ -86,14 +134,6 @@ export default function Home() {
         }
       }, 200);
     }
-  };
-
-  const nextVideo = () => {
-    setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
-  };
-
-  const prevVideo = () => {
-    setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,21 +172,38 @@ export default function Home() {
       if (data.url) {
         window.location.href = data.url;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error:", error);
-      alert(error.message || "Something went wrong. Please try again.");
+      alert(error instanceof Error ? error.message : "Something went wrong. Please try again.");
       setIsProcessing(false);
+    }
+  };
+
+  const scrollToDonate = () => {
+    const donateSection = document.getElementById('donate');
+    if (donateSection) {
+      donateSection.scrollIntoView({ behavior: 'smooth' });
+      // Update URL hash without triggering page reload
+      window.history.pushState(null, '', '#donate');
     }
   };
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white border-b">
+      <header className="bg-white border-b sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-gray-300" />
-            <div className="text-xl font-bold">Maurice A. Ferré Foundation</div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-gray-300" />
+              <div className="text-xl font-bold">Maurice A. Ferré Foundation</div>
+            </div>
+            <Button
+              onClick={scrollToDonate}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Donate
+            </Button>
           </div>
         </div>
       </header>
@@ -154,7 +211,7 @@ export default function Home() {
       {/* Hero Section with Video Carousel */}
       <section className="w-full bg-black">
         <div className="relative w-full aspect-video overflow-hidden group">
-          {videos.map((videoId, index) => (
+          {VIDEOS.map((videoId, index) => (
             <div
               key={videoId}
               className={`absolute inset-0 transition-opacity duration-1000 ${
@@ -220,7 +277,7 @@ export default function Home() {
       <section className="py-6 bg-white">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex gap-4 overflow-x-auto justify-center px-2 py-3">
-            {videos.map((videoId, index) => (
+            {VIDEOS.map((videoId, index) => (
               <button
                 key={videoId}
                 onClick={() => switchToVideo(index, true)}
@@ -231,9 +288,11 @@ export default function Home() {
                 }`}
                 aria-label={`Play video ${index + 1}`}
               >
-                <img
+                <Image
                   src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
                   alt={`Video ${index + 1} thumbnail`}
+                  width={480}
+                  height={360}
                   className="w-full h-full object-cover rounded-lg"
                 />
                 {index === currentVideoIndex && (
@@ -257,13 +316,13 @@ export default function Home() {
 
       {/* Quote Section */}
       <section className="py-24 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-5xl mx-auto px-4">
+        <div className="max-w-5xl mx-auto px-12">
           <blockquote className="relative">
             <p className="text-2xl md:text-3xl lg:text-4xl leading-relaxed mb-8 font-[family-name:var(--font-fahkwang)]">
-              "If I have contributed something of value to Miami in my public
+              &ldquo;If I have contributed something of value to Miami in my public
               service, over the past 50 years, it was because I was accompanied
               by a dedicated, intelligent and honorable cadre of people that
-              made many of our dreams possible."
+              made many of our dreams possible.&rdquo;
             </p>
             <footer className="flex flex-col gap-1 border-l-4 border-blue-600 pl-6">
               <cite className="text-xl font-semibold not-italic">
@@ -277,7 +336,7 @@ export default function Home() {
 
       {/* Our Mission Section */}
       <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-4">
+        <div className="max-w-5xl mx-auto px-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">
             Our Mission
           </h2>
@@ -317,24 +376,24 @@ export default function Home() {
 
       {/* About Section */}
       <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-12">
           <div className="space-y-6">
             <p className="text-lg leading-relaxed">
               <span className="float-left text-3xl font-bold leading-[0.8] mr-2 mt-2">
                 T
               </span>
               he Maurice A. Ferré Foundation is dedicated to supporting
-              education, arts, and community development initiatives that
-              enrich the lives of Miami residents. Through strategic
-              partnerships and targeted programs, we work to create lasting
-              positive change in our community.
+              education, arts, and community development initiatives that enrich
+              the lives of Miami residents. Through strategic partnerships and
+              targeted programs, we work to create lasting positive change in
+              our community.
             </p>
 
             <p className="text-lg leading-relaxed">
               Founded with a vision to honor the legacy of Miami&apos;s
               longest-serving mayor, our foundation focuses on empowering the
-              next generation of leaders. We believe in the transformative
-              power of education and the arts to build stronger, more vibrant
+              next generation of leaders. We believe in the transformative power
+              of education and the arts to build stronger, more vibrant
               communities.
             </p>
 
@@ -349,121 +408,127 @@ export default function Home() {
       </section>
 
       {/* Donation Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-2xl mx-auto px-4">
+      <section id="donate" className="py-20 bg-gray-50 scroll-mt-20">
+        <div className="max-w-2xl mx-auto px-12">
           <div className="bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-8 md:p-12">
             {/* Donation Form */}
             <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
                 <h2 className="text-2xl font-bold">Make a Donation</h2>
                 <p className="text-gray-600">
                   Support our mission with a secure donation
                 </p>
               </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                  {/* Amount Selection */}
-                  <div className="flex flex-col gap-2">
-                    <label className="font-medium">Select Amount</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {presetAmounts.map((amount) => (
-                        <Button
-                          key={amount}
-                          type="button"
-                          variant={
-                            selectedAmount === amount ? "default" : "outline"
-                          }
-                          onClick={() => setSelectedAmount(amount)}
-                          className="h-12"
-                        >
-                          ${amount.toLocaleString()}
-                        </Button>
-                      ))}
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                {/* Amount Selection */}
+                <div className="flex flex-col gap-2">
+                  <label className="font-medium">Select Amount</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {PRESET_AMOUNTS.map((amount) => (
                       <Button
+                        key={amount}
                         type="button"
                         variant={
-                          selectedAmount === "custom" ? "default" : "outline"
+                          selectedAmount === amount ? "default" : "outline"
                         }
-                        onClick={() => setSelectedAmount("custom")}
-                        className="h-12"
+                        onClick={() => setSelectedAmount(amount)}
+                        className="h-24 text-md"
                       >
-                        Custom
+                        ${amount.toLocaleString()}
                       </Button>
-                    </div>
-                    {selectedAmount === "custom" && (
+                    ))}
+                    <Button
+                      type="button"
+                      variant={
+                        selectedAmount === "custom" ? "default" : "outline"
+                      }
+                      onClick={() => setSelectedAmount("custom")}
+                      className="h-24 text-md"
+                    >
+                      Custom
+                    </Button>
+                  </div>
+                  {selectedAmount === "custom" && (
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        $
+                      </span>
                       <Input
                         ref={customInputRef}
                         type="number"
-                        placeholder="Enter amount"
+                        placeholder="0"
                         value={customAmount}
                         onChange={(e) => setCustomAmount(e.target.value)}
                         min="1"
+                        className="pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
-                    )}
-                  </div>
+                    </div>
+                  )}
+                </div>
 
-                  {/* Donor Information */}
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="name" className="font-medium">
-                      Full Name
-                    </label>
-                    <Input
-                      id="name"
-                      placeholder="John Doe"
-                      value={donorInfo.name}
-                      onChange={(e) =>
-                        setDonorInfo({ ...donorInfo, name: e.target.value })
-                      }
-                      required
-                      disabled={isProcessing}
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="email" className="font-medium">
-                      Email
-                    </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="john@example.com"
-                      value={donorInfo.email}
-                      onChange={(e) =>
-                        setDonorInfo({ ...donorInfo, email: e.target.value })
-                      }
-                      required
-                      disabled={isProcessing}
-                    />
-                    <p className="text-xs text-gray-500">
-                      We&apos;ll send your receipt to this email
-                    </p>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                    size="lg"
+                {/* Donor Information */}
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="name" className="font-medium">
+                    Full Name
+                  </label>
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    value={donorInfo.name}
+                    onChange={(e) =>
+                      setDonorInfo({ ...donorInfo, name: e.target.value })
+                    }
+                    required
                     disabled={isProcessing}
-                  >
-                    {isProcessing ? (
-                      "Processing..."
-                    ) : (
-                      <>
-                        Continue to Payment{" "}
-                        {selectedAmount === "custom"
-                          ? customAmount
-                            ? `$${Number(customAmount).toLocaleString()}`
-                            : ""
-                          : `$${selectedAmount.toLocaleString()}`}
-                      </>
-                    )}
-                  </Button>
+                  />
+                </div>
 
-                  <p className="text-xs text-gray-500 text-center">
-                    You&apos;ll be redirected to Stripe for secure payment
-                    processing
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="email" className="font-medium">
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={donorInfo.email}
+                    onChange={(e) =>
+                      setDonorInfo({ ...donorInfo, email: e.target.value })
+                    }
+                    required
+                    disabled={isProcessing}
+                  />
+                  <p className="text-xs text-gray-500">
+                    We&apos;ll send your receipt to this email
                   </p>
-                </form>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  size="lg"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    "Processing..."
+                  ) : (
+                    <>
+                      Continue to Payment{" "}
+                      {selectedAmount === "custom"
+                        ? customAmount
+                          ? `$${Number(customAmount).toLocaleString()}`
+                          : ""
+                        : `$${selectedAmount.toLocaleString()}`}
+                    </>
+                  )}
+                </Button>
+
+                <p className="text-xs text-gray-500 text-center">
+                  You&apos;ll be redirected to Stripe for secure payment
+                  processing
+                </p>
+              </form>
             </div>
           </div>
         </div>
