@@ -7,8 +7,16 @@ export default function DonatePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to home page with #donate hash
-    router.replace("/#donate");
+    // Redirect to home page
+    router.replace("/");
+
+    // Scroll to donation section after a short delay
+    setTimeout(() => {
+      const donateSection = document.getElementById('donate');
+      if (donateSection) {
+        donateSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 500);
   }, [router]);
 
   return (

@@ -91,19 +91,6 @@ export default function Home() {
     };
   }, [nextVideo]);
 
-  // Handle URL hash navigation to donation section
-  useEffect(() => {
-    // Check if URL has #donate hash
-    if (window.location.hash === '#donate') {
-      setTimeout(() => {
-        const donateSection = document.getElementById('donate');
-        if (donateSection) {
-          donateSection.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    }
-  }, []);
-
   // Control video playback when switching videos
   useEffect(() => {
     // Wait a bit for players to be ready
