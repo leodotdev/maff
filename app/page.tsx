@@ -39,7 +39,7 @@ export default function Home() {
   const [selectedAmount, setSelectedAmount] = useState<number | "custom">(
     "custom"
   );
-  const [customAmount, setCustomAmount] = useState("");
+  const [customAmount, setCustomAmount] = useState("1000");
   const customInputRef = useRef<HTMLInputElement>(null);
   const [donorInfo, setDonorInfo] = useState({
     name: "",
@@ -52,6 +52,7 @@ export default function Home() {
   useEffect(() => {
     if (selectedAmount === "custom" && customInputRef.current) {
       customInputRef.current.focus();
+      customInputRef.current.select();
     }
   }, [selectedAmount]);
 
