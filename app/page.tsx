@@ -48,8 +48,15 @@ export default function Home() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const playerRefs = useRef<(YTPlayer | null)[]>([]);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
+    // Skip auto-focus on initial page load
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     if (selectedAmount === "custom" && customInputRef.current) {
       customInputRef.current.focus();
       customInputRef.current.select();
