@@ -71,32 +71,45 @@ export default function Home() {
     setCurrentVideoIndex((prev) => (prev - 1 + VIDEOS.length) % VIDEOS.length);
   }, []);
 
-  // Load YouTube IFrame API and initialize players
+  // Load YouTube IFrame API after a delay (lazy loading)
   useEffect(() => {
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName("script")[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    // Defer loading the YouTube API until after initial page load
+    const loadYouTubeAPI = () => {
+      // Check if script already exists
+      if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        return;
+      }
 
-    window.onYouTubeIframeAPIReady = () => {
-      // Initialize players for each video
-      VIDEOS.forEach((videoId, index) => {
-        const player = new window.YT.Player(`player-${index}`, {
-          events: {
-            onReady: (event: YTEvent) => {
-              event.target.setVolume(50);
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName("script")[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+      window.onYouTubeIframeAPIReady = () => {
+        // Initialize players for each video
+        VIDEOS.forEach((videoId, index) => {
+          const player = new window.YT.Player(`player-${index}`, {
+            events: {
+              onReady: (event: YTEvent) => {
+                event.target.setVolume(50);
+              },
+              onStateChange: (event: YTEvent) => {
+                // State 0 = ended
+                if (event.data === 0) {
+                  nextVideo();
+                }
+              },
             },
-            onStateChange: (event: YTEvent) => {
-              // State 0 = ended
-              if (event.data === 0) {
-                nextVideo();
-              }
-            },
-          },
+          });
+          playerRefs.current[index] = player;
         });
-        playerRefs.current[index] = player;
-      });
+      };
     };
+
+    // Delay loading by 1 second to prioritize critical resources
+    const timer = setTimeout(loadYouTubeAPI, 1000);
+
+    return () => clearTimeout(timer);
   }, [nextVideo]);
 
   // Control video playback when switching videos
@@ -226,6 +239,7 @@ export default function Home() {
                 className="w-full h-full relative z-20"
                 allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
+                loading="lazy"
                 title={`Video ${index + 1}`}
               />
             </div>
@@ -324,11 +338,16 @@ export default function Home() {
               by a dedicated, intelligent and honorable cadre of people that
               made many of our dreams possible.&rdquo;
             </p>
-            <footer className="flex flex-col gap-1 border-l-4 border-blue-600 pl-6">
+            <footer className="flex flex-col gap-2 border-l-4 border-blue-600 pl-6">
               <cite className="text-xl font-semibold not-italic">
                 Maurice A. Ferré
               </cite>
-              <span className="text-gray-500">January 31, 2019</span>
+              <div className="text-gray-600 space-y-1">
+                <p><span className="font-medium">b.</span> June 23, 1935 Ponce, PR</p>
+                <p><span className="font-medium">d.</span> September 19, 2019 Miami, FL</p>
+                <p className="pt-2">Mayor of Miami, FL</p>
+                <p className="font-semibold">1973 - 1985</p>
+              </div>
             </footer>
           </blockquote>
         </div>
@@ -530,39 +549,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-6 border-t bg-white">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-          <div className="font-bold">Maurice A. Ferré Foundation</div>
-          <div className="flex space-x-6">
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:transition-colors"
-            >
-              Twitter
-            </a>
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:transition-colors"
-            >
-              Facebook
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-600 hover:transition-colors"
-            >
-              Instagram
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
