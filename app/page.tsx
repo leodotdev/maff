@@ -197,10 +197,7 @@ export default function Home() {
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-gray-300" />
-              <div className="text-xl font-bold">Maurice A. Ferré Foundation</div>
-            </div>
+            <div className="text-xl font-bold">Maurice A. Ferré Foundation</div>
             <Button
               onClick={scrollToDonate}
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -537,10 +534,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-6 border-t bg-white">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-gray-300" />
-            <div className="font-bold">Maurice A. Ferré Foundation</div>
-          </div>
+          <div className="font-bold">Maurice A. Ferré Foundation</div>
           <div className="flex space-x-6">
             <a
               href="https://twitter.com"
