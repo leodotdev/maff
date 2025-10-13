@@ -382,10 +382,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-12">
           <div className="space-y-6">
             <p className="text-lg leading-relaxed">
-              <span className="float-left text-3xl font-bold leading-[0.8] mr-2 mt-2">
-                T
-              </span>
-              he Maurice A. Ferré Foundation is dedicated to supporting
+              The Maurice A. Ferré Foundation is dedicated to supporting
               education, arts, and community development initiatives that enrich
               the lives of Miami residents. Through strategic partnerships and
               targeted programs, we work to create lasting positive change in
