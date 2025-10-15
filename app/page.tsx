@@ -21,12 +21,15 @@ interface YTEvent {
 declare global {
   interface Window {
     YT: {
-      Player: new (elementId: string, config: {
-        events: {
-          onReady?: (event: YTEvent) => void;
-          onStateChange?: (event: YTEvent) => void;
-        };
-      }) => YTPlayer;
+      Player: new (
+        elementId: string,
+        config: {
+          events: {
+            onReady?: (event: YTEvent) => void;
+            onStateChange?: (event: YTEvent) => void;
+          };
+        }
+      ) => YTPlayer;
     };
     onYouTubeIframeAPIReady?: () => void;
   }
@@ -35,7 +38,52 @@ declare global {
 const PRESET_AMOUNTS = [250, 500, 1000, 2500, 5000];
 const VIDEOS = ["H2_aua_K2r4", "TIcShqSYSao", "AVBFJAuunHs", "X4wHOFoHZLY"];
 
+const PHOTOS = [
+  {
+    src: "/photos/photo-1.jpeg",
+    caption: "Mother Teresa and Mayor Maurice A. Ferré, 1981",
+  },
+  {
+    src: "/photos/photo-2.jpeg",
+    caption: "King Juan Carlos of Spain with Mayor MAF, 1980s",
+  },
+  {
+    src: "/photos/photo-3.jpeg",
+    caption: "Mayor MAF speaking at the UN about Puerto Rico, 1980s",
+  },
+  {
+    src: "/photos/photo-4.JPG",
+    caption: "Ferré Family signing agreement with FIU, May 12, 2021",
+  },
+  {
+    src: "/photos/photo-5.jpeg",
+    caption: "MAF with Gov. Bob Graham of Florida, 1980s",
+  },
+  {
+    src: "/photos/photo-6.jpeg",
+    caption:
+      "MAF with Sister Isolina Ferré Missionary Nun from Puerto Rico (his godmother and aunt), 1980s",
+  },
+];
+
+// Parallax hook
+function useParallax() {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return scrollY;
+}
+
 export default function Home() {
+  const scrollY = useParallax();
   const [selectedAmount, setSelectedAmount] = useState<number | "custom">(
     "custom"
   );
@@ -46,6 +94,7 @@ export default function Home() {
     email: "",
   });
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const playerRefs = useRef<(YTPlayer | null)[]>([]);
   const isInitialMount = useRef(true);
@@ -69,6 +118,14 @@ export default function Home() {
 
   const prevVideo = useCallback(() => {
     setCurrentVideoIndex((prev) => (prev - 1 + VIDEOS.length) % VIDEOS.length);
+  }, []);
+
+  const nextPhoto = useCallback(() => {
+    setCurrentPhotoIndex((prev) => (prev + 1) % PHOTOS.length);
+  }, []);
+
+  const prevPhoto = useCallback(() => {
+    setCurrentPhotoIndex((prev) => (prev - 1 + PHOTOS.length) % PHOTOS.length);
   }, []);
 
   // Load YouTube IFrame API after a delay (lazy loading)
@@ -182,17 +239,21 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error:", error);
-      alert(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
       setIsProcessing(false);
     }
   };
 
   const scrollToDonate = () => {
-    const donateSection = document.getElementById('donate');
+    const donateSection = document.getElementById("donate");
     if (donateSection) {
-      donateSection.scrollIntoView({ behavior: 'smooth' });
+      donateSection.scrollIntoView({ behavior: "smooth" });
       // Update URL hash without triggering page reload
-      window.history.pushState(null, '', '#donate');
+      window.history.pushState(null, "", "#donate");
 
       // Focus and select the custom input after scroll completes
       setTimeout(() => {
@@ -207,13 +268,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-6">
+      <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
+        <div className="max-w-[960px] mx-auto px-6 py-6">
           <div className="flex items-center justify-between gap-3">
-            <div className="text-xl font-bold">Maurice A. Ferré Foundation</div>
+            <div className="text-lg font-bold text-gray-900 font-[family-name:var(--font-fahkwang)]">
+              Maurice A. Ferré Foundation
+            </div>
             <Button
               onClick={scrollToDonate}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-600 text-white rounded-full px-8 font-bold font-[family-name:var(--font-fahkwang)]"
             >
               Donate
             </Button>
@@ -221,83 +284,125 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section with Video Carousel */}
-      <section className="w-full bg-black">
-        <div className="relative w-full h-[75vh] overflow-hidden group">
-          {VIDEOS.map((videoId, index) => (
+      {/* Hero Section with Parallax */}
+      <section className="relative w-full h-[80vh] overflow-hidden">
+        {/* Background layer - moves slower, full width */}
+        <div
+          className="absolute inset-0 w-full h-[120vh]"
+          style={{
+            transform: `translateY(${scrollY * 0.5}px)`,
+            willChange: "transform",
+          }}
+        >
+          <Image
+            src="/hero-bg.png"
+            alt="Background"
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority
+            quality={90}
+          />
+        </div>
+
+        {/* Content layer - Centered 960px container */}
+        <div className="relative z-10 h-full flex items-start md:items-center justify-center pt-32 md:pt-0">
+          <div className="max-w-[960px] w-full mx-auto px-6 h-auto md:h-full flex items-start md:items-center">
+            <div className="flex flex-col md:flex-row items-stretch w-full md:py-20">
+              {/* Quote Section */}
+              <div className="w-full flex items-start md:items-center mb-2 md:mb-0">
+                <blockquote className="max-w-[600px] w-full">
+                  <p className="text-[22px] md:text-[36px] lg:text-[40px] leading-tight font-bold text-gray-900 mb-4 md:mb-8 font-[family-name:var(--font-fahkwang)]">
+                    &ldquo;If I have contributed something of value to Miami in
+                    my public service, over the past 50 years, it was because I
+                    was accompanied by a dedicated, intelligent and honorable
+                    cadre of people that made many of our dreams
+                    possible.&rdquo;
+                  </p>
+                  <footer className="space-y-1.5 md:space-y-2">
+                    <cite className="text-blue-600 text-[18px] md:text-[32px] font-bold not-italic block font-[family-name:var(--font-fahkwang)]">
+                      Maurice A. Ferré
+                    </cite>
+                    <div className="text-[11px] md:text-base text-gray-700 space-y-0 md:space-y-1">
+                      <p>
+                        <span className="font-medium">b.</span> June 23, 1935
+                        Ponce, PR
+                      </p>
+                      <p>
+                        <span className="font-medium">d.</span> September 19,
+                        2019 Miami, FL
+                      </p>
+                      <p className="pt-2">Mayor of Miami, FL</p>
+                      <p className="font-bold">1973 - 1985</p>
+                    </div>
+                  </footer>
+                </blockquote>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* Foreground layer - Portrait positioned bottom right */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="max-w-[960px] w-full h-full mx-auto relative">
             <div
-              key={videoId}
-              className={`absolute inset-0 transition-opacity duration-1000 ${
-                index === currentVideoIndex
-                  ? "opacity-100 z-20"
-                  : "opacity-0 z-0"
-              }`}
+              className="absolute bottom-0 right-0 md:-right-40 w-[60%] md:w-[70%] h-[50vh] md:h-[130vh]"
+              style={{
+                transform: `translateY(${scrollY * 0.3}px)`,
+                willChange: "transform",
+              }}
             >
-              <iframe
-                id={`player-${index}`}
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&cc_load_policy=1&playsinline=1&rel=0&fs=1&enablejsapi=1`}
-                className="w-full h-full relative z-20"
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
-                loading="lazy"
-                title={`Video ${index + 1}`}
+              <Image
+                src="/hero-fg.png"
+                alt="Maurice A. Ferré"
+                fill
+                sizes="(max-width: 768px) 60vw, 70vw"
+                className="object-contain object-bottom"
+                priority
+                quality={90}
               />
             </div>
-          ))}
-
-          {/* Navigation Controls - Show on Hover */}
-          <button
-            onClick={prevVideo}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-4 rounded-full backdrop-blur-sm transition-all z-10 opacity-0 group-hover:opacity-100"
-            aria-label="Previous video"
-          >
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <button
-            onClick={nextVideo}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-4 rounded-full backdrop-blur-sm transition-all z-10 opacity-0 group-hover:opacity-100"
-            aria-label="Next video"
-          >
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+          </div>
         </div>
       </section>
 
-      {/* Video Playlist */}
-      <section className="py-6 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
+      {/* Videos Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-[960px] mx-auto px-6">
+          {/* Main Video Player */}
+          <div className="relative w-full lg:w-[960px] lg:h-[540px] aspect-video lg:aspect-auto bg-black rounded-[36px] overflow-hidden shadow-2xl mb-8 mx-auto">
+            {VIDEOS.map((videoId, index) => (
+              <div
+                key={videoId}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === currentVideoIndex
+                    ? "opacity-100 z-20"
+                    : "opacity-0 z-0"
+                }`}
+              >
+                <iframe
+                  id={`player-${index}`}
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&cc_load_policy=1&playsinline=1&rel=0&fs=1&enablejsapi=1`}
+                  className="w-full h-full"
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                  loading="lazy"
+                  title={`Video ${index + 1}`}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Video Thumbnails */}
           <div className="flex gap-4 overflow-x-auto justify-center px-2 py-3">
             {VIDEOS.map((videoId, index) => (
               <button
                 key={videoId}
                 onClick={() => switchToVideo(index, true)}
-                className={`relative flex-shrink-0 w-40 aspect-video rounded-lg transition-all ${
+                className={`relative flex-shrink-0 w-48 aspect-video rounded-[18px] transition-all ${
                   index === currentVideoIndex
-                    ? "ring-4 ring-blue-500 scale-105"
+                    ? "ring-4 ring-blue-600 scale-105"
                     : "opacity-60 hover:opacity-100"
                 }`}
                 aria-label={`Play video ${index + 1}`}
@@ -307,11 +412,11 @@ export default function Home() {
                   alt={`Video ${index + 1} thumbnail`}
                   width={480}
                   height={360}
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover rounded-[18px]"
                 />
                 {index === currentVideoIndex && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-blue-500 text-white p-2 rounded-full">
+                    <div className="bg-blue-600 text-white p-3 rounded-full">
                       <svg
                         className="w-6 h-6"
                         fill="currentColor"
@@ -328,119 +433,190 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quote Section */}
-      <section className="py-24 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-5xl mx-auto px-12">
-          <blockquote className="relative">
-            <p className="text-2xl md:text-3xl lg:text-4xl leading-relaxed mb-8 font-[family-name:var(--font-fahkwang)]">
-              &ldquo;If I have contributed something of value to Miami in my public
-              service, over the past 50 years, it was because I was accompanied
-              by a dedicated, intelligent and honorable cadre of people that
-              made many of our dreams possible.&rdquo;
-            </p>
-            <footer className="flex flex-col gap-2 border-l-4 border-blue-600 pl-6">
-              <cite className="text-xl font-semibold not-italic">
-                Maurice A. Ferré
-              </cite>
-              <div className="text-gray-600 space-y-1">
-                <p><span className="font-medium">b.</span> June 23, 1935 Ponce, PR</p>
-                <p><span className="font-medium">d.</span> September 19, 2019 Miami, FL</p>
-                <p className="pt-2">Mayor of Miami, FL</p>
-                <p className="font-semibold">1973 - 1985</p>
-              </div>
-            </footer>
-          </blockquote>
-        </div>
-      </section>
-
       {/* Our Mission Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">
-            Our Mission
-          </h2>
-          <div className="space-y-6 text-lg leading-relaxed">
-            <p>
-              The Maurice A. Ferré Foundation supports charitable and
-              educational organizations that enhance the general well-being of
-              various communities in the Unites States of America. Its present
-              focus is in the state of Florida and territory of Puerto Rico.
-            </p>
-            <p>
-              The Foundation has partnered with Florida International University
-              to establish the{" "}
-              <a
-                href="https://ferre.fiu.edu/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 underline"
-              >
-                Maurice A. Ferré Institute for Civic Leadership
-              </a>{" "}
-              within the Steven J. Green School of International and Public
-              Affairs. In addition it is dedicated to preserving and enhancing
-              the Maurice A. Ferré Park, a public green space located in the
-              heart of Downtown Miami&apos;s cultural district.
-            </p>
-            <p>
-              The Maurice A. Ferré Foundation works with civic organizations to
-              enhance mass public transportation, develop affordable housing
-              solutions, foster opportunities for entrepreneurship in
-              underserved communities and seek solutions that help humans adapt
-              to the effects of a changing climate.
-            </p>
+      <section className="py-24">
+        <div className="max-w-[960px] mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+            {/* Photo Carousel */}
+            <div className="space-y-4">
+              <div className="relative aspect-[4/5] rounded-[36px] overflow-hidden shadow-xl bg-gray-200">
+                {PHOTOS.map((photo, index) => (
+                  <div
+                    key={index}
+                    className={`absolute inset-0 transition-opacity duration-500 ${
+                      index === currentPhotoIndex ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    <Image
+                      src={photo.src}
+                      alt={photo.caption}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover"
+                      quality={90}
+                    />
+                  </div>
+                ))}
+
+                {/* Navigation Arrows */}
+                <button
+                  onClick={prevPhoto}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all z-10"
+                  aria-label="Previous photo"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={nextPhoto}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all z-10"
+                  aria-label="Next photo"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Caption */}
+              <p className="text-sm text-gray-600 text-center">
+                {PHOTOS[currentPhotoIndex].caption}
+              </p>
+
+              {/* Dots Indicator */}
+              <div className="flex justify-center gap-2 pt-2">
+                {PHOTOS.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPhotoIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === currentPhotoIndex
+                        ? "bg-blue-600 w-6"
+                        : "bg-gray-300 hover:bg-gray-400"
+                    }`}
+                    aria-label={`Go to photo ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Mission Text */}
+            <div className="space-y-6 text-lg leading-relaxed">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+                Our mission
+              </h2>
+              <p className="text-gray-800">
+                The Maurice A. Ferré Foundation supports charitable and
+                educational organizations that enhance the general well-being of
+                various communities in the United States of America. Its present
+                focus is in the state of Florida and territory of Puerto Rico.
+              </p>
+              <p className="text-gray-800">
+                The Foundation has partnered with Florida International
+                University to establish the{" "}
+                <a
+                  href="https://ferre.fiu.edu/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-600 underline font-medium"
+                >
+                  Maurice A. Ferré Institute for Civic Leadership
+                </a>{" "}
+                within the Steven J. Green School of International and Public
+                Affairs. In addition it is dedicated to preserving and enhancing
+                the Maurice A. Ferré Park, a public green space located in the
+                heart of Downtown Miami&apos;s cultural district.
+              </p>
+              <p className="text-gray-800">
+                The Maurice A. Ferré Foundation works with civic organizations
+                to enhance mass public transportation, develop affordable
+                housing solutions, foster opportunities for entrepreneurship in
+                underserved communities and seek solutions that help humans
+                adapt to the effects of a changing climate.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-12">
-          <div className="space-y-6">
-            <p className="text-lg leading-relaxed">
-              The Maurice A. Ferré Foundation is dedicated to supporting
-              education, arts, and community development initiatives that enrich
-              the lives of Miami residents. Through strategic partnerships and
-              targeted programs, we work to create lasting positive change in
-              our community.
-            </p>
-
-            <p className="text-lg leading-relaxed">
-              Founded with a vision to honor the legacy of Miami&apos;s
-              longest-serving mayor, our foundation focuses on empowering the
-              next generation of leaders. We believe in the transformative power
-              of education and the arts to build stronger, more vibrant
-              communities.
-            </p>
-
-            <p className="text-lg leading-relaxed">
-              Your contribution helps us continue this vital work. Every
-              donation directly supports programs that make a meaningful
-              difference in the lives of Miami families. Join us in building a
-              brighter future for our city.
-            </p>
-          </div>
+      {/* Donation Section / Footer */}
+      <footer
+        id="donate"
+        className="relative py-24 pb-128 overflow-hidden scroll-mt-20"
+      >
+        {/* Footer Background - Full width */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/foot-bg.png"
+            alt="Footer background"
+            fill
+            sizes="100vw"
+            className="object-cover"
+            quality={85}
+          />
         </div>
-      </section>
 
-      {/* Donation Section */}
-      <section id="donate" className="py-20 bg-gray-50 scroll-mt-20">
-        <div className="max-w-2xl mx-auto px-12">
-          <div className="bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] p-8 md:p-12">
-            {/* Donation Form */}
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-2xl font-bold">Make a Donation</h2>
-                <p className="text-gray-600">
-                  Support our mission with a secure donation
+        <div className="relative z-10 max-w-[960px] mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+            {/* Text Content */}
+            <div className="space-y-6">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+                Make a donation
+              </h2>
+              <div className="space-y-4 text-lg leading-relaxed text-gray-900">
+                <p>
+                  The Maurice A. Ferré Foundation is dedicated to supporting
+                  education, arts, and community development initiatives that
+                  enrich the lives of Miami residents. Through strategic
+                  partnerships and targeted programs, we work to create lasting
+                  positive change in our community.
+                </p>
+                <p>
+                  Founded with a vision to honor the legacy of Miami&apos;s
+                  longest-serving mayor, our foundation focuses on empowering
+                  the next generation of leaders. We believe in the
+                  transformative power of education and the arts to build
+                  stronger, more vibrant communities.
+                </p>
+                <p>
+                  Your contribution helps us continue this vital work. Every
+                  donation directly supports programs that make a meaningful
+                  difference in the lives of Miami families. Join us in building
+                  a brighter future for our city.
                 </p>
               </div>
+            </div>
 
+            {/* Donation Form */}
+            <div className="bg-white rounded-[36px] p-8 shadow-lg">
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 {/* Amount Selection */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium">Select Amount</label>
-                  <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-col gap-3">
+                  <label className="font-semibold text-gray-900 text-base">
+                    Select Amount
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
                     {PRESET_AMOUNTS.map((amount) => (
                       <Button
                         key={amount}
@@ -449,7 +625,7 @@ export default function Home() {
                           selectedAmount === amount ? "default" : "outline"
                         }
                         onClick={() => setSelectedAmount(amount)}
-                        className="h-24 text-md"
+                        className="h-16 text-base font-semibold"
                       >
                         ${amount.toLocaleString()}
                       </Button>
@@ -459,33 +635,44 @@ export default function Home() {
                       variant={
                         selectedAmount === "custom" ? "default" : "outline"
                       }
-                      onClick={() => setSelectedAmount("custom")}
-                      className="h-24 text-md"
+                      onClick={() => {
+                        setSelectedAmount("custom");
+                        setTimeout(() => {
+                          if (customInputRef.current) {
+                            customInputRef.current.focus();
+                            customInputRef.current.select();
+                          }
+                        }, 0);
+                      }}
+                      className="h-16 text-base font-semibold col-span-2"
                     >
-                      Custom
+                      Custom Amount
                     </Button>
                   </div>
                   {selectedAmount === "custom" && (
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    <div className="relative mt-2">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-base font-medium">
                         $
                       </span>
                       <Input
                         ref={customInputRef}
                         type="number"
-                        placeholder="0"
+                        placeholder="Enter amount"
                         value={customAmount}
                         onChange={(e) => setCustomAmount(e.target.value)}
                         min="1"
-                        className="pl-7 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="pl-8 h-14 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                   )}
                 </div>
 
                 {/* Donor Information */}
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="name" className="font-medium">
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="name"
+                    className="font-semibold text-gray-900 text-base"
+                  >
                     Full Name
                   </label>
                   <Input
@@ -497,11 +684,15 @@ export default function Home() {
                     }
                     required
                     disabled={isProcessing}
+                    className="h-12 text-base"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="email" className="font-medium">
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="email"
+                    className="font-semibold text-gray-900 text-base"
+                  >
                     Email
                   </label>
                   <Input
@@ -514,23 +705,23 @@ export default function Home() {
                     }
                     required
                     disabled={isProcessing}
+                    className="h-12 text-base"
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-600">
                     We&apos;ll send your receipt to this email
                   </p>
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  size="lg"
+                  className="w-full bg-blue-600 hover:bg-blue-600 text-white h-14 text-base font-semibold mt-2 rounded-full"
                   disabled={isProcessing}
                 >
                   {isProcessing ? (
                     "Processing..."
                   ) : (
                     <>
-                      Continue to Payment{" "}
+                      Donate{" "}
                       {selectedAmount === "custom"
                         ? customAmount
                           ? `$${Number(customAmount).toLocaleString()}`
@@ -541,14 +732,13 @@ export default function Home() {
                 </Button>
 
                 <p className="text-xs text-gray-500 text-center">
-                  You&apos;ll be redirected to Stripe for secure payment
-                  processing
+                  Secure payment via Stripe
                 </p>
               </form>
             </div>
           </div>
         </div>
-      </section>
+      </footer>
     </div>
   );
 }
