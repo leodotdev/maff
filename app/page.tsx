@@ -40,14 +40,6 @@ const VIDEOS = ["H2_aua_K2r4", "TIcShqSYSao", "AVBFJAuunHs", "X4wHOFoHZLY"];
 
 const PHOTOS = [
   {
-    src: "/photos/photo-1.jpeg",
-    caption: "Mother Teresa and Mayor Maurice A. Ferré, 1981",
-  },
-  {
-    src: "/photos/photo-2.jpeg",
-    caption: "King Juan Carlos of Spain with Mayor MAF, 1980s",
-  },
-  {
     src: "/photos/photo-3.jpeg",
     caption: "Mayor MAF speaking at the UN about Puerto Rico, 1980s",
   },
@@ -63,6 +55,14 @@ const PHOTOS = [
     src: "/photos/photo-6.jpeg",
     caption:
       "MAF with Sister Isolina Ferré Missionary Nun from Puerto Rico (his godmother and aunt), 1980s",
+  },
+  {
+    src: "/photos/photo-1.jpeg",
+    caption: "Mother Teresa and Mayor Maurice A. Ferré, 1981",
+  },
+  {
+    src: "/photos/photo-2.jpeg",
+    caption: "King Juan Carlos of Spain with Mayor MAF, 1980s",
   },
 ];
 
@@ -98,6 +98,8 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const playerRefs = useRef<(YTPlayer | null)[]>([]);
   const isInitialMount = useRef(true);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   useEffect(() => {
     // Skip auto-focus on initial page load
@@ -127,6 +129,32 @@ export default function Home() {
   const prevPhoto = useCallback(() => {
     setCurrentPhotoIndex((prev) => (prev - 1 + PHOTOS.length) % PHOTOS.length);
   }, []);
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextPhoto();
+    } else if (isRightSwipe) {
+      prevPhoto();
+    }
+  };
 
   // Load YouTube IFrame API after a delay (lazy loading)
   useEffect(() => {
@@ -285,7 +313,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section with Parallax */}
-      <section className="relative w-full h-[80vh] overflow-hidden">
+      <section className="relative w-full h-[90vh] md:h-[80vh] max-h-[680px] md:max-h-none overflow-hidden">
         {/* Background layer - moves slower, full width */}
         <div
           className="absolute inset-0 w-full h-[120vh]"
@@ -439,7 +467,12 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-12 items-start">
             {/* Photo Carousel */}
             <div className="space-y-4">
-              <div className="relative aspect-[4/5] rounded-[36px] overflow-hidden shadow-xl bg-gray-200">
+              <div
+                className="relative aspect-[4/5] rounded-[36px] overflow-hidden shadow-xl bg-gray-200 touch-pan-y"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+              >
                 {PHOTOS.map((photo, index) => (
                   <div
                     key={index}
