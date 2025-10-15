@@ -313,7 +313,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section with Parallax */}
-      <section className="relative w-full h-[90vh] md:h-[80vh] max-h-[680px] md:max-h-none overflow-hidden">
+      <section className="relative w-full h-[95vh] md:h-[80vh] max-h-[680px] md:max-h-none overflow-hidden">
         {/* Background layer - moves slower, full width */}
         <div
           className="absolute inset-0 w-full h-[120vh]"
