@@ -49,12 +49,12 @@ const PHOTOS = [
   },
   {
     src: "/photos/photo-5.jpeg",
-    caption: "MAF with Gov. Bob Graham of Florida, 1980s",
+    caption:
+      "MAF with Sister Isolina Ferré Missionary Nun from Puerto Rico (his godmother and aunt), 1980s",
   },
   {
     src: "/photos/photo-6.jpeg",
-    caption:
-      "MAF with Sister Isolina Ferré Missionary Nun from Puerto Rico (his godmother and aunt), 1980s",
+    caption: "MAF with Gov. Bob Graham of Florida, 1980s",
   },
   {
     src: "/photos/photo-1.jpeg",
