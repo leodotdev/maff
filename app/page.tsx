@@ -58,7 +58,7 @@ const PHOTOS = [
   },
   {
     src: "/photos/photo-1.jpeg",
-    caption: "Mother Teresa and Mayor Maurice A. Ferré, 1981",
+    caption: "Mother Teresa and Mayor MAF, 1981",
   },
   {
     src: "/photos/photo-2.jpeg",
@@ -315,13 +315,7 @@ export default function Home() {
       {/* Hero Section with Parallax */}
       <section className="relative w-full h-[95vh] md:h-[80vh] max-h-[680px] md:max-h-none overflow-hidden">
         {/* Background layer - moves slower, full width */}
-        <div
-          className="absolute inset-0 w-full h-[120vh]"
-          style={{
-            transform: `translateY(${scrollY * 0.5}px)`,
-            willChange: "transform",
-          }}
-        >
+        <div className="absolute inset-0 w-full h-full">
           <Image
             src="/hero-bg.png"
             alt="Background"
@@ -366,7 +360,6 @@ export default function Home() {
                   </footer>
                 </blockquote>
               </div>
-
             </div>
           </div>
         </div>
@@ -374,13 +367,7 @@ export default function Home() {
         {/* Foreground layer - Portrait positioned bottom right */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="max-w-[960px] w-full h-full mx-auto relative">
-            <div
-              className="absolute bottom-0 right-0 md:-right-40 w-[60%] md:w-[70%] h-[50vh] md:h-[130vh]"
-              style={{
-                transform: `translateY(${scrollY * 0.3}px)`,
-                willChange: "transform",
-              }}
-            >
+            <div className="absolute bottom-0 right-0 md:-right-40 w-[60%] md:w-[70%] h-[50vh] md:h-[130vh]">
               <Image
                 src="/hero-fg.png"
                 alt="Maurice A. Ferré"
